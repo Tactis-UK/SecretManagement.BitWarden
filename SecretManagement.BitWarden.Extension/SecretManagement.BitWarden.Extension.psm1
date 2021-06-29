@@ -83,7 +83,7 @@ function Invoke-bwcmd {
                         }
                         Write-Warning @"
 More than one result was found. Try getting a specific object by `id` instead. The following objects were found:
-                        $($errparse  | FT ID, Name | Out-String )
+                        $($errparse  | Format-Table ID, Name | Out-String )
 "@
                     }
                     Default {
@@ -124,9 +124,15 @@ function Get-Secret {
         [hashtable] $AdditionalParameters
     )
 
-    $res = Invoke-bwcmd "get item $Name"
-
-
+    
+    # AH - serach in a specific folder if specified as an AdditionalParameter folderName)
+    if ($AdditionalParameters.folderName) {
+        $folder = (invoke-bwcmd "get folder $($AdditionalParameters.folderName)")        
+        $res = Invoke-bwcmd "list items --search $Name --folderid $($folder.id)" | Where-Object UserName -eq $Name
+    }
+    else {
+        $res = Invoke-bwcmd "get item $Name"
+    }
     Switch ($AdditionalParameters.outputType ) {
         'Detailed' {
             Write-Verbose "Getting Detailed Secret"
@@ -278,15 +284,17 @@ function Get-SecretInfo {
         IF ($vaultSecretInfo.type -eq 1) {
             $type = [Microsoft.PowerShell.SecretManagement.SecretType]::PSCredential
         }
-        ELSE
-        { $type = [Microsoft.PowerShell.SecretManagement.SecretType]::SecureString }
+        ELSE { 
+            $type = [Microsoft.PowerShell.SecretManagement.SecretType]::SecureString 
+        }
+
         Write-Output (
             [Microsoft.PowerShell.SecretManagement.SecretInformation]::new(
                 $vaultSecretInfo.Name,
                 $type,
                 $VaultName)
         ) | Select-Object *, @{Name = 'GUID_Name'; Expression = { $vaultSecretInfo.ID } }
-        
+
     }
 }
 
