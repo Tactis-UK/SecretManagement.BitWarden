@@ -127,8 +127,8 @@ function Get-Secret {
     
     # AH - serach in a specific folder if specified as an AdditionalParameter folderName)
     if ($AdditionalParameters.folderName) {
-        $folder = (invoke-bwcmd "get folder $($AdditionalParameters.folderName)")        
-        $res = Invoke-bwcmd "list items --search $Name --folderid $($folder.id)" | Where-Object UserName -eq $Name
+        $folder = (Invoke-bwcmd "get folder $($AdditionalParameters.folderName)")        
+        $res = Invoke-bwcmd "list items --search $Name --folderid $($folder.id)" | Where-Object name -eq $Name
     }
     else {
         $res = Invoke-bwcmd "get item $Name"
